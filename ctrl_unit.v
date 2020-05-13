@@ -8,13 +8,14 @@ module ctrl_unit(  // p176
     output [3:0] NPCOp,
     output EXTOp,
     output ALUSrc0,  // select for A
-    input      [5:0] op,    //31:26
-    input      [5:0] funct,  // 5:0
-    input      [4:0] bgez_bltz,  // 20:16
+    input  [5:0] op,    //31:26
+    input  [5:0] funct,  // 5:0
+    input  [4:0] bgez_bltz,  // 20:16
     output [4:0] ALUOp,
     output [1:0] DMWr,
     output [2:0] DMRe);
 
+    // reg for control signal
     reg [1:0] RegDst_r;
     reg [1:0] ToReg_r;  // What write into Reg
     reg [1:0] ALUSrc_r;
@@ -25,7 +26,7 @@ module ctrl_unit(  // p176
     reg [4:0] ALUOp_r;
     reg [1:0] DMWr_r;
     reg [2:0] DMRe_r;
-
+    
     assign RegDst = RegDst_r;
     assign ToReg = ToReg_r;
     assign ALUSrc = ALUSrc_r;
