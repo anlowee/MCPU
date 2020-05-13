@@ -2,7 +2,7 @@ module test;
 	reg clk;
 	reg rst;
 
-	scpu scpu(clk, rst);
+	mcpu mcpu(clk, rst);
 	
 	initial 
 	begin
