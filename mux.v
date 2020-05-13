@@ -64,3 +64,18 @@ module ALUSrcMux0(
     end
 
 endmodule
+
+module IorDMux(
+    input [31:0] PC, DataAddr,
+    input IorD,
+    output reg [9:0] Addr
+);
+
+    always @(*) begin
+        if (IorD == 1'b0)  // 0-Instrcution, 1-Data
+            Addr <= PC[9:0];
+        else
+            Addr <= DataAddr[9:0];
+    end
+
+endmodule
