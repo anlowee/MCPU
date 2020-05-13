@@ -10,6 +10,19 @@
 `define NPC_BRANCH_BNE      4'b1000
 `define NPC_NOP             4'B1001
 
+// state control signal
+`define STATE_IF            4'b0000          
+`define STATE_ID            4'b0001
+`define STATE_EX_LS         4'b0010  // EX stage for L/S ins
+`define STATE_EX_RI         4'b0011  // EX stage for R-type and R-I-type ins
+`define STATE_EX_BRANCH     4'b0100  // EX stage for branch ins
+`define STATE_EX_JUMP       4'b0101  // EX stage for jump ins
+`define STATE_MEM_L         4'b0110  // MEM stage for L ins
+`define STATE_MEM_S         4'b0111  // MEM stage for S ins
+`define STATE_WB_R          4'b1000  // WB stage for R-type ins
+`define STATE_WB_L          4'b1001  // WB stage for L ins
+`define STATE_INI           4'b1111  // initial state
+
 // RegDst control signal
 `define RD_RT     2'b00  // rt
 `define RD_RD     2'b01  // rd
@@ -105,7 +118,6 @@
 // jump op code
 `define J       6'b000010 
 `define JAL     6'b000011 
-`define JALR_JR 6'b000000
 
 // l/s op code
 `define LB      6'b100000 
