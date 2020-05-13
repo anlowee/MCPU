@@ -50,7 +50,7 @@ module mcpu(
     wire [31:0] A;  // alu num1
     wire [31:0] B;  // alu num2
     wire [31:0] RFWD; // RF' WD
-    wire [31:0] addr;  // IorDMux
+    wire [9:0] addr;  // IorDMux
 
     // state_machine
     wire IF_signal;
@@ -143,7 +143,7 @@ module mcpu(
     RF RF(
         .clk(clk),
         .rst(rst),
-        .work(ID_signal),
+        .work(WB_signal),
         .RFWr(RFWr),
         .A1(Instruction[25:21]),
         .A2(Instruction[20:16]),
@@ -204,7 +204,8 @@ module mcpu(
         .NPCOp(NPCOp),
         .IMM(Instruction[25:0]),
         .Reg(RFDataOut1),
-        .work(EX_signal),
+        .work_EX(EX_signal),
+        .work_IF(IF_signal),
 
         .NPC(npc),
         .PCPLUS4(pcplus4)
