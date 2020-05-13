@@ -18,7 +18,6 @@ module state_machine(
     reg EX_signal_r;
     reg MEM_signal_r;
     reg WB_signal_r;
-    reg IorD_signal_r;
 
     // reg for storing the current state
     reg [3:0] cur_state;
@@ -31,7 +30,6 @@ module state_machine(
         EX_signal_r = 1'b0;
         MEM_signal_r = 1'b0;
         WB_signal_r = 1'b0;
-        IorD_signal_r = 1'b0;
     end 
 
     assign IF_signal = IF_signal_r;
@@ -39,8 +37,8 @@ module state_machine(
     assign EX_signal = EX_signal_r;
     assign MEM_signal = MEM_signal_r;
     assign WB_signal = WB_signal_r;
-    assign IorD_signal = IorD_signal_r;
     assign IRWr = (cur_state == `STATE_IF);
+    assign IorD_signal = (cur_state == `STATE_MEM_L || cur_state == `STATE_MEM_S);
 
     always @(posedge clk) begin
         IF_signal_r = 1'b0;
@@ -61,37 +59,41 @@ module state_machine(
                 EX_signal_r = 1'b1;
                 case (op)
                     `R_TYPE: begin
-                        if (funct == `JALR || funct == `JR)
-                            cur_state = `STATE_EX_JUMP;
-                        else
-                            cur_state = `STATE_EX_RI;
+                        case (funct)
+                            `JALR: cur_state = `STATE_EX_JUMPA;
+                            `JR: cur_state = `STATE_EX_JUMP;
+                            default: cur_state = `STATE_EX_RI;
+                        endcase
                     end
+                    `ADDI, `ADDIU, `ANDI, `LUI, `ORI, `SLTI, `SLTIU, `XORI: cur_state = `STATE_EX_RI;
                     `BEQ, `BGTZ, `BLEZ, `BNE, `BLTZ_BGEZ: cur_state = `STATE_EX_BRANCH;
                     `LB, `LBU, `LH, `LHU, `LW, `SB, `SH, `SW: cur_state = `STATE_EX_LS;
-                    `J, `JAL: cur_state = `STATE_EX_JUMP;
+                    `J: cur_state = `STATE_EX_JUMP;
+                    `JAL: cur_state = `STATE_EX_JUMPA;
                     default: cur_state = `STATE_INI;
                 endcase
             end
             `STATE_EX_LS: begin
                 MEM_signal_r = 1'b1;
                 case (op)
-                    `LB, `LBU, `LH, `LHU, `LW: begin 
-                        cur_state = `STATE_MEM_L;
-                        IorD_signal_r = 1'b1;
-                    end
+                    `LB, `LBU, `LH, `LHU, `LW: cur_state = `STATE_MEM_L;
                     `SB, `SH, `SW: cur_state = `STATE_MEM_S;
                     default: cur_state = `STATE_INI;
                 endcase
             end
             `STATE_EX_RI: begin
                 WB_signal_r = 1'b1;
-                cur_state = `STATE_WB_R;
+                cur_state = `STATE_WB;
+            end
+            `STATE_EX_JUMPA: begin
+                WB_signal_r = 1'b1;
+                cur_state = `STATE_WB;
             end
             `STATE_MEM_L: begin
                 WB_signal_r = 1'b1;
-                cur_state = `STATE_WB_L;
+                cur_state = `STATE_WB;
             end
-            `STATE_EX_BRANCH, `STATE_EX_JUMP, `STATE_WB_R, `STATE_WB_L, `STATE_MEM_S: begin
+            `STATE_EX_BRANCH, `STATE_EX_JUMP, `STATE_WB, `STATE_MEM_S: begin
                 IF_signal_r = 1'b1;
                 cur_state = `STATE_IF;
             end
