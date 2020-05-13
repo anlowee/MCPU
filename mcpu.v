@@ -9,8 +9,13 @@ module mcpu(
     wire [31:0] npc;
     wire [31:0] pcplus4;
     
-    // IM
+    // Memory
+    wire [31:0] InstructionOut;
+    wire [31:0] DataOut;
+
+    // IR_MDR
     wire [31:0] Instruction;
+    wire [31:0] DMDataOut;
 
     // ctrl_unit
     wire [1:0] RegDst;
@@ -36,9 +41,6 @@ module mcpu(
     wire Gez;
     wire Overflow;
 
-    // DM
-    wire [31:0] DMDataOut;
-
     // EXT
     wire [31:0] EXTOut;
     wire [31:0] EXTShamtOut;
@@ -48,6 +50,16 @@ module mcpu(
     wire [31:0] A;  // alu num1
     wire [31:0] B;  // alu num2
     wire [31:0] RFWD; // RF' WD
+    wire [31:0] addr;  // IorDMux
+
+    // state_machine
+    wire IF_signal;
+    wire ID_signal;
+    wire EX_signal;
+    wire MEM_signal;
+    wire WB_signal;
+    wire IorD_signal;
+    wire IRWr;
 
 
     // instants of each module
@@ -59,8 +71,50 @@ module mcpu(
         .PC(pc)
     );
 
-    IM IM(.PC(pc[9:0]), .Instruction(Instruction));
+    IorDMux IorDMux(
+        .PC(pc),
+        .DataAddr(ALUResult),
+        .IorD(IorD_signal),
+
+        .Addr(addr)
+    );
+
+    memory memory(
+        .clk(clk),
+        .Addr(addr),
+        .work(MEM_signal),
+        .DMWr(DMWr),
+        .DMRe(DMRe),
+        .DataIn(RFDataOut2),
+
+        .DataOut(DataOut),
+        .Instruction(InstructionOut)
+    );
     
+    state_machine state_machine(
+        .clk(clk),
+        .op(Instruction[31:26]),
+        .funct(Instruction[5:0]),
+        
+        .IF_signal(IF_signal),
+        .ID_signal(ID_signal),
+        .EX_signal(EX_signal),
+        .MEM_signal(MEM_signal),
+        .WB_signal(WB_signal),
+        .IorD_signal(IorD_signal),
+        .IRWr(IRWr)
+    );
+
+    IR_MDR IR_MDR(
+        .clk(clk),
+        .IRWr(IRWr),
+        .InsIn(InstructionOut),
+        .DataIn(DataOut),
+        
+        .InsOut(Instruction),
+        .DataOut(DMDataOut)
+    );
+
     ctrl_unit ctrl_unit(
         .op(Instruction[31:26]),
         .funct(Instruction[5:0]),
@@ -89,6 +143,7 @@ module mcpu(
     RF RF(
         .clk(clk),
         .rst(rst),
+        .work(ID_signal),
         .RFWr(RFWr),
         .A1(Instruction[25:21]),
         .A2(Instruction[20:16]),
@@ -134,6 +189,7 @@ module mcpu(
         .A(A),
         .B(B),
         .ALUOp(ALUOp),
+        .work(EX_signal),
 
         .C(ALUResult),
         .Zero(Zero),
@@ -148,19 +204,10 @@ module mcpu(
         .NPCOp(NPCOp),
         .IMM(Instruction[25:0]),
         .Reg(RFDataOut1),
+        .work(EX_signal),
 
         .NPC(npc),
         .PCPLUS4(pcplus4)
-    );
-
-    DM DM(
-        .clk(clk),
-        .DMWr(DMWr),
-        .DMRe(DMRe),
-        .Addr(ALUResult[9:0]),
-        .DataIn(RFDataOut2),
-
-        .DataOut(DMDataOut)
     );
 
     ToRegMux ToRegMux(
