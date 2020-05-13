@@ -8,7 +8,9 @@ module state_machine(
     output ID_signal,
     output EX_signal,
     output MEM_signal,
-    output WB_signal);
+    output WB_signal,
+    output IorD_signal,
+    output IRWr);
 
     // reg for output
     reg IF_signal_r;
@@ -16,6 +18,7 @@ module state_machine(
     reg EX_signal_r;
     reg MEM_signal_r;
     reg WB_signal_r;
+    reg IorD_signal_r;
 
     // reg for storing the current state
     reg [3:0] cur_state;
@@ -28,6 +31,7 @@ module state_machine(
         EX_signal_r = 1'b0;
         MEM_signal_r = 1'b0;
         WB_signal_r = 1'b0;
+        IorD_signal_r = 1'b0;
     end 
 
     assign IF_signal = IF_signal_r;
@@ -35,6 +39,8 @@ module state_machine(
     assign EX_signal = EX_signal_r;
     assign MEM_signal = MEM_signal_r;
     assign WB_signal = WB_signal_r;
+    assign IorD_signal = IorD_signal_r;
+    assign IRWr = (cur_state == `STATE_IF);
 
     always @(posedge clk) begin
         IF_signal_r = 1'b0;
@@ -69,7 +75,10 @@ module state_machine(
             `STATE_EX_LS: begin
                 MEM_signal_r = 1'b1;
                 case (op)
-                    `LB, `LBU, `LH, `LHU, `LW: cur_state = `STATE_MEM_L;
+                    `LB, `LBU, `LH, `LHU, `LW: begin 
+                        cur_state = `STATE_MEM_L;
+                        IorD_signal_r = 1'b1;
+                    end
                     `SB, `SH, `SW: cur_state = `STATE_MEM_S;
                     default: cur_state = `STATE_INI;
                 endcase
