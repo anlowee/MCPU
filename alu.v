@@ -33,8 +33,8 @@ module alu(A, B, ALUOp, C, work, Zero, Overflow, Gez);
             `ALU_NOR:  C_r = ~(A | B);  // NOR
             `ALU_SLL:  C_r = A << B;  // SLL
             `ALU_SLLV: C_r = B << {27'b0, A[4:0]};  // SLLV
-            `ALU_SRA:  C_r = A >>> B;  // SRA
-            `ALU_SRAV: C_r = B >>> {27'b0, A[4:0]};  // SRAV
+            `ALU_SRA:  C_r = ($signed(A)) >>> B;  // SRA
+            `ALU_SRAV: C_r = ($signed(B)) >>> {27'b0, A[4:0]};  // SRAV
             `ALU_SRL:  C_r = A >> B;  // SRL
             `ALU_SRLV: C_r = B >> {27'b0, A[4:0]};  // SRLV
             `ALU_XOR:  C_r = A ^ B;  // XOR 
